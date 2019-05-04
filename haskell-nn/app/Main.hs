@@ -19,7 +19,7 @@ model = Sequential [
 main :: IO ()
 main = do
     stdgen <- getStdGen
-    let rands = randomRs (-0.1, 0.1) stdgen :: [Float]
+    let rands = randomRs (-0.3, 0.3) stdgen :: [Float]
     let (nrands, imodel) = initialize rands model
     let (s, trainedmodel) = trainmodel xdata ydata 1 10000 imodel
     putStrLn s
