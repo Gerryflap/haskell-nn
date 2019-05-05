@@ -1,4 +1,5 @@
 {-# language ExistentialQuantification #-}
+-- This library might get phased out later
 module Lib where
 
 import System.Random

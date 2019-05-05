@@ -3,6 +3,8 @@ module Main where
 import Lib
 import System.Random
 import Control.Monad
+import HaskellNN
+import HaskellNN.Datastructures
 
 xdata = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
 ydata = [[0.0], [1.0], [1.0], [0.0]]
