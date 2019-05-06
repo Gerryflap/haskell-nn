@@ -19,4 +19,4 @@ What works:
 
 Things to improve:
 - No warning when combining layers that do not fit together (This is very dangerous!)
-- No multithreading support
+- Better multithreading support
