@@ -1,5 +1,7 @@
 module HaskellNN.Datastructures where
 
+import Control.Parallel
+
 data NDArray    = Scalar Float
                 | Vector [Float]
                 | Matrix [[Float]]
@@ -87,12 +89,19 @@ flatten (Vector x)  | length x == 1 = Scalar $ head x
 flatten (Matrix x)  = Vector $ foldl (\flat arr -> flat ++ arr) [] x
 
 matmul :: NDArray -> NDArray -> NDArray
-matmul (Matrix a) (Matrix b) = Matrix [[ sum $ zipWith (*) ar bc | bc <- (transpose b) ] | ar <- a ]
+matmul (Matrix a) (Matrix b)  = Matrix $ parallelmatmul a b
+--matmul ma@(Matrix a) (Matrix b)  = Matrix [[ sum $ zipWith (*) ar bc | bc <- (transpose b) ] | ar <- a ]
 matmul a@(Vector _) b@(Matrix _) = flatten $ expanddims 0 a @@ b
 matmul a@(Matrix _) b@(Vector _) = flatten $ a @@ expanddims 1 b
 
 infixl 5 @@
 (@@) = matmul
+
+parallelmatmul :: [[Float]] -> [[Float]] -> [[Float]]
+parallelmatmul [] _ = []
+parallelmatmul (ar:ars) b = par next ([sum $ zipWith (*) ar bc | bc <- (transpose b)]: next)
+    where
+        next = parallelmatmul ars b
 
 data NDTree = Leaf NDArray
             | Node [NDTree]
