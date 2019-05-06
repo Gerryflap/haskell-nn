@@ -94,8 +94,19 @@ instance Layer_ Dense where
             newErrors = errors @@ transposeM w
             gradsBias = errors
             summedinp = foldl1 (mergend (+)) $ splitnd inp
-            gradsWeights = expanddims 1 summedinp @@ expanddims 0 errors
+            gradsWeights = (expanddims 1 summedinp) @@ (expanddims 0 errors)
     initialize rands (Dense w b) = (newrands, Dense newW newB)
         where
             (newB, rands2) = uniformRandV (shape 0 b) rands
             (newW, newrands) = uniformRandM (shape 0 w) (shape 1 w) rands2
+    setparams (Dense w b) (Node [Leaf nw@(Matrix _), Leaf nb@(Vector _)]) = Dense nw nb
+    getparams (Dense w b) = Node [Leaf w, Leaf b]
+
+-- Activation Layer
+data Activation = Activation ActivationFn
+
+instance Layer_ Activation where
+    fwd (Activation (afwd, _)) input = (mapNd afwd input, Leaf input)
+    bwd (Activation (_, abwd)) (Leaf inp, errors) = (mergend abwd summedinp errors, LeafEmpty)
+        where
+            summedinp = foldl1 (mergend (+)) $ splitnd inp

@@ -35,6 +35,11 @@ zeros n 0 = Vector $ replicate n 0
 zeros 0 n = zeros n 0
 zeros n m = Matrix $ replicate n (replicate m 0)
 
+zerosLikeNd :: NDArray -> NDArray
+zerosLikeNd m@(Matrix _) = zeros (shape 0 m) (shape 1 m)
+zerosLikeNd v@(Vector _) = zeros (shape 0 v) 0
+zerosLikeNd s@(Scalar _) = zeros 0 0
+
 uniformRandM :: Int -> Int -> [Float] -> (NDArray, [Float])
 uniformRandM 0 _ rands = (Matrix [], rands)
 uniformRandM n m rands = (Matrix ((take m newrands):nextm), drop m newrands)
@@ -63,10 +68,10 @@ mergend f v@(Vector _) s@(Scalar _) = mergend f s v
 mergend f (Scalar x) (Matrix y) = Matrix $ map (map (x*)) y
 mergend f m@(Matrix _) s@(Scalar _) = mergend f s m
 
-mapm :: (Float -> Float) -> NDArray -> NDArray
-mapm f (Scalar x) = Scalar $ f x
-mapm f (Vector x) = Vector $ f <$> x
-mapm f (Matrix x) = Matrix $ (f <$>) <$> x
+mapNd :: (Float -> Float) -> NDArray -> NDArray
+mapNd f (Scalar x) = Scalar $ f x
+mapNd f (Vector x) = Vector $ f <$> x
+mapNd f (Matrix x) = Matrix $ (f <$>) <$> x
 
 -- Expands dimensions of the given NDArray. The first integer denotes the axis of expansion
 expanddims :: Int -> NDArray -> NDArray
@@ -99,3 +104,16 @@ mergendt f (Node t1s) (Node t2s) = Node $ zipWith (mergendt f) t1s t2s
 mergendt f (Leaf x) (Leaf y) = Leaf $ f x y
 mergendt _ LeafEmpty LeafEmpty = LeafEmpty
 mergendt _ _ _ = LeafEmpty
+
+zerosLikeNdt :: NDTree -> NDTree
+zerosLikeNdt (Node ts) = Node $ map zerosLikeNdt ts
+zerosLikeNdt (Leaf nda) = Leaf $ zerosLikeNd nda
+zerosLikeNdt LeafEmpty = LeafEmpty
+
+mapNdt :: (NDArray -> NDArray) -> NDTree -> NDTree
+mapNdt f (Node ts) = Node $ map (mapNdt f) ts
+mapNdt f (Leaf nda) = Leaf $ f nda
+mapNdt f LeafEmpty = LeafEmpty
+
+mapNdtNd :: (Float -> Float) -> NDTree -> NDTree
+mapNdtNd f = mapNdt (mapNd f)
