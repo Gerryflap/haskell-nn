@@ -23,3 +23,7 @@ initM :: [Float] -> Model -> ([Float], Model)
 initM rands (Model lay lossfn opt) = (nrand, Model nlay lossfn opt)
     where
         (nrand, nlay) = initialize rands lay
+
+getLayer (Model l _ _) = l
+getLossFn (Model _ lfn _) = lfn
+getOptimizer (Model _ _ opt) = opt

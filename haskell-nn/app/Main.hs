@@ -48,14 +48,17 @@ xdata = Matrix [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
 ydata = Matrix [[0.0], [1.0], [1.0], [0.0]]
 
 nn = Layer $ Sequential [
-        Layer $ Dense (zeros 1 10) (zeros 10 0),
+        Layer $ Dense (zeros 1 20) (zeros 20 0),
         Layer $ Activation relu,
-        Layer $ Dense (zeros 10 1) (zeros 1 0)
+        Layer $ Dense (zeros 20 20) (zeros 20 0),
+        Layer $ Activation relu,
+        Layer $ Dense (zeros 20 1) (zeros 1 0),
+        Layer $ Activation sigmoid
     ]
 
 model = Model nn mse (Optimizer $ SGD 0.01)
 
-train m 0 = "Done.\n" ++ "Final output: " ++ (show $ predictBatch m xdata)
+train m 0 = "Done.\n" ++ "Final output: " ++ (show $ predictBatch m xdata) ++ "\n Model params:" ++ (show (getparams $ getLayer m))
 train m batches = "Loss: " ++ (show loss) ++ "\n" ++ train nm (batches-1)
     where
         (loss, nm) = trainBatch m xdata ydata
@@ -63,7 +66,7 @@ train m batches = "Loss: " ++ (show loss) ++ "\n" ++ train nm (batches-1)
 main :: IO ()
 main = do
     stdgen <- getStdGen
-    let rands = randomRs (-1.0, 1.0) stdgen :: [Float]
+    let rands = randomRs (-0.3, 0.3) stdgen :: [Float]
     let (nrands, imodel) = initM rands model
 
-    putStrLn $ train imodel 100
+    putStrLn $ train imodel 1000

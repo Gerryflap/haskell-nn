@@ -18,3 +18,13 @@ relu_bwd activation gradient    | activation > 0 = gradient
 
 relu :: ActivationFn
 relu = (relu_fwd, relu_bwd)
+
+
+sigmoid_fwd :: ActivationFwd
+sigmoid_fwd x = 1.0 / (1.0 + exp (-x))
+
+sigmoid_bwd :: ActivationBwd
+sigmoid_bwd i x = x * (sigmoid_fwd i) * (1.0 - sigmoid_fwd i)
+
+sigmoid :: ActivationFn
+sigmoid = (sigmoid_fwd, sigmoid_bwd)
