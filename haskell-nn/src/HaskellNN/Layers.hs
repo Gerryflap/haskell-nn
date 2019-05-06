@@ -82,24 +82,28 @@ instance Layer_ Sequential where
 -- Models a Dense (Fully Connected) layer
 data Dense = Dense NDArray NDArray
 
-denselayer :: NDArray -> NDArray -> Dense
-denselayer w@(Matrix _) b@(Vector _) = Dense w b
+denselayer :: Int -> Int -> Dense
+denselayer inpshape outpshape = Dense (zeros inpshape outpshape) (zeros outpshape 0)
 
 instance Layer_ Dense where
     fwd (Dense w b) input = (out, Leaf input)
         where
             out = mergend (+) b (input @@ w)
-    bwd (Dense w b) (Leaf inp, errors) = (newErrors, Node [Leaf gradsWeights, Leaf gradsBias])
+    bwd (Dense w b) (Leaf inp, errors) =(newErrors, Node [Leaf gradsWeights, Leaf gradsBias])
         where
             newErrors = errors @@ transposeM w
-            gradsBias = errors
-            summedinp = foldl1 (mergend (+)) $ splitnd inp
-            gradsWeights = (expanddims 1 summedinp) @@ (expanddims 0 errors)
+            gradsBias = foldl1 (mergend (+)) $ splitnd errors
+            gradsWeights = foldl1 (mergend (+)) $ zipWith (\i e -> ((expanddims 1 i) @@ (expanddims 0 e))) (splitnd inp) (splitnd errors)
     initialize rands (Dense w b) = (newrands, Dense newW newB)
         where
-            (newB, rands2) = uniformRandV (shape 0 b) rands
-            (newW, newrands) = uniformRandM (shape 0 w) (shape 1 w) rands2
-    setparams (Dense w b) (Node [Leaf nw@(Matrix _), Leaf nb@(Vector _)]) = Dense nw nb
+            newB = zerosLikeNd b --uniformRandV (shape 0 b) rands
+            (newW, newrands) = uniformRandM (shape 0 w) (shape 1 w) rands
+    setparams (Dense w b) (Node [Leaf nw@(Matrix _), Leaf nb@(Vector _)])   | aligned = Dense nw nb
+                                                                            | otherwise = error errmsg
+        where
+            aligned = (shape 0 w == shape 0 nw) && (shape 1 w == shape 1 nw) && (shape 0 b == shape 0 nb)
+            errmsg = "Shapes not aligned, old: (" ++ (show $ (shape 0 w, shape 1 w, shape 0 b)) ++ ") new : " ++ (show $ (shape 0 nw, shape 1 nw, shape 0 nb))
+    setparams (Dense _ _) a = error $ "Cannot set dense to " ++ (show a)
     getparams (Dense w b) = Node [Leaf w, Leaf b]
 
 -- Activation Layer
@@ -107,6 +111,6 @@ data Activation = Activation ActivationFn
 
 instance Layer_ Activation where
     fwd (Activation (afwd, _)) input = (mapNd afwd input, Leaf input)
-    bwd (Activation (_, abwd)) (Leaf inp, errors) = (mergend abwd summedinp errors, LeafEmpty)
+    bwd (Activation (_, abwd)) (Leaf inp, errors) = (mergend abwd inp errors, LeafEmpty)
         where
             summedinp = foldl1 (mergend (+)) $ splitnd inp

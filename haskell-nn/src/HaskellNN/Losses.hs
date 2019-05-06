@@ -5,7 +5,7 @@ import HaskellNN.Datastructures
 type LossFunction = (NDArray -> NDArray -> (NDArray, NDArray))
 
 mse :: LossFunction
-mse prd true = (loss, meangrads)
+mse prd true = (loss, diffs)
     where
         diffs@(Matrix m) = mergend (-) prd true
         sqdiffs = mapNd (**2) diffs
