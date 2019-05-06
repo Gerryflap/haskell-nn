@@ -1,5 +1,7 @@
 # A Neural Network library written in Haskell
 
+```zipWith gerben haskell deeplearning```
+
 An attempt at making a neural network library in Haskell.
 This is not something you'd want to use for any project, bugs are probably still present.
 
